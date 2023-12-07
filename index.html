@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>طلب شراء خضروات وفاكهة</title>
+    <link rel="stylesheet" href="./css/master.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+
+
+    <button style="min-width:100px;font-size: 18px; font-family:cairo; cursor:pointer; width: 120px; margin: 20px; border-radius: 10px; background: #0a1951; color: white; padding: 5px 0px; font-weight: 600; border: none;" class="addNewOrder mainClassForSetColor">
+        طلب
+    </button>
+
+
+    
+</body>
+
+<script src="./cdn/swalCdn.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-database.js"></script>
+
+<script type="module">
+
+
+  /**/
+  import {docName, initializeApp,firebaseConfig, getFirestore,getCountFromServer, collection, query, where, getDocs,getDoc, setDoc, addDoc, doc,deleteDoc,onSnapshot,orderBy, limit,startAt,endAt } from './firebase.js';
+
+  firebase.initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const storage = firebase.storage();
+  /**/
+
+  let X;
+
+  async function getCit(db,X) {
+  const citiesCol = collection(db,`${X}`);
+  const citySnapshot = await getDocs(citiesCol);
+  const cityList = citySnapshot.docs.map(doc => doc.data());
+  return cityList;
+  };
+
+
+
+
+/* 5 start add new order */
+
+
+window.addEventListener("load",e=>{
+    document.querySelector(".addNewOrder").click();
+});
+
+
+
+
+
+document.querySelector(".addNewOrder").addEventListener("click",()=>{
+
+
+Swal.fire({
+    title: ' انشاء طلب ',
+    html: `
+    
+    
+    <div class="mainForm" style="overflow-y: hidden; overflow-c: scroll; font-size: 17px!important; font-family: 'Cairo', sans-serif; font-weight: bold!important;">
+
+        <label for="name">:الاسم</label>
+        <input style="width: 98%;" class="addOrderInput" type="text" dir="auto" autocomplete="off" id="name" value="">
+
+        <label for="phone">رقم الهاتف:</label>
+        <input style="width: 98%;" class="addOrderInput" type="number" placeholder="" dir="auto" autocomplete="off" id="phone" value="">
+
+        <label for="active">الطلب:</label>
+        <input style="width: 98%;" class="addOrderInput" id="active" type="text" dir="auto" autocomplete="off">
+
+        <label for="email">عنوان البريد الإلكتروني:</label>
+        <input style="width: 98%;" class="addOrderInput" type="text" dir="rtl" autocomplete="off" id="email" value="">
+
+        <label for="note">الملاحظة:</label>
+        <textarea style="width: 98%; " class="addOrderInput" type="text" dir="rtl" autocomplete="off" id="note" value=""></textarea>
+
+        <label for="city">المحافظة/العنوان</label>
+        <input style="width: 98%;" class="addOrderInput" type="text" dir="rtl" autocomplete="off" id="city" value="">
+
+
+    </div>
+    
+    
+    `,
+    confirmButtonText: 'ارسال',
+}).then((result) => {    
+    if (result.isConfirmed) {
+
+        let name=document.querySelector("#name").value;
+        let phone=document.querySelector("#phone").value;
+        let email=document.querySelector("#email").value;
+        let active=document.querySelector("#active").value;
+        let city=document.querySelector("#city").value;
+        let note=document.querySelector("#note").value;
+
+
+        function idGenerator() {
+          var S4 = function() {
+            return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+          };
+          return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+        };
+
+        let id = idGenerator();
+        if(name.trim()!==""&&phone.trim()!==""&&active.trim()!==""&&city.trim()!==""){
+
+            Swal.fire({
+                title: 'Please Wait!',
+                didOpen: () => {
+                  Swal.showLoading()
+                }
+            });
+
+          AddNewOrder(name,phone,active,city,email,id);
+        } else {
+          Swal.fire(
+              'برجاة كتابة البيانات بشكل صحيح',
+              '',
+              'error',
+            )
+        }
+
+        function AddNewOrder(name,phone,active,city,email,id){
+          let randomOrderNumber = (Math.random()*1000000).toFixed();
+          setDoc(doc(db,"Orders",id), {
+            id: id,
+            name: name,
+            phone: phone,
+            city: city,
+            active: active,
+            email: email,
+            note: note,
+            country_calling_code: "+20",
+            date: Date.now(),
+            orderDate: showDate(),
+            orderNumber: randomOrderNumber,
+          }).then(e=>{
+         
+            Swal.fire(
+              'تم ارسال الطلب سنقوم بالتواصل معكم قريبا',
+              '',
+              'success',
+            )
+
+          });
+
+        };
+        
+    };
+});
+
+});
+
+
+/* 5 end add new order */
+
+
+
+
+
+
+/* 1 start function to get data now */
+function showDate(){
+  
+  const d = new Date();
+  
+  let year = d.getFullYear();
+  let month = d.getMonth();
+  let day = d.getDate();
+  let hour = d.getHours();
+  let mint = d.getMinutes();
+  
+  if(mint<10){
+    mint=`0${mint}`
+  }
+  
+  let dateNow;
+
+  console.log(hour)
+
+  if (hour>=12){
+    
+    dateNow= `
+      ${year}/${month+1}/${day}
+      => ${hour-12}:${mint} PM
+      `;
+
+  } else if (hour<=11){
+    
+      dateNow = `
+      
+      ${year}/${month+1}/${day}
+         ${hour}:${mint} AM
+      
+      `;
+  }
+  return dateNow;
+}
+
+/* 1 end function to get data now */
+
+
+
+
+
+</script>
+</html>
